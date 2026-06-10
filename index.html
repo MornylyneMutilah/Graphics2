@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Graphics Pipeline Demo - HTML5 Canvas</title>
+
+<style>
+    body {
+        margin: 0;
+        background-color: #1a1a1a;
+        color: white;
+        font-family: Arial, sans-serif;
+        text-align: center;
+    }
+
+    h1 {
+        margin-top: 10px;
+    }
+
+    #info {
+        margin-bottom: 10px;
+    }
+
+    canvas {
+        border: 2px solid white;
+        background-color: black;
+    }
+</style>
+</head>
+<body>
+
+<h1>HTML5 Canvas Graphics Pipeline Demo</h1>
+
+<div id="info">
+    Controls:
+    ← → ↑ ↓ Move Car |
+    Q/E Rotate |
+    + / - Scale
+</div>
+
+<canvas id="canvas" width="900" height="600"></canvas>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+/* 
+   APPLICATION STAGE
+   Define scene objects, state variables, and user input
+    */
+
+const sun = {
+    x: 700,
+    y: 120,
+    radius: 50,
+    color: "yellow"
+};
+
+const car = {
+    x: 200,
+    y: 400,
+    width: 120,
+    height: 50,
+    rotation: 0,
+    scale: 1,
+    speed: 5
+};
+
+const keys = {};
+
+document.addEventListener("keydown", (e) => {
+    keys[e.key] = true;
+});
+
+document.addEventListener("keyup", (e) => {
+    keys[e.key] = false;
+});
+
+/* 
+   APPLICATION STAGE
+   Process user input
+    */
+
+function update() {
+
+    if (keys["ArrowLeft"]) {
+        car.x -= car.speed;
+    }
+
+    if (keys["ArrowRight"]) {
+        car.x += car.speed;
+    }
+
+    if (keys["ArrowUp"]) {
+        car.y -= car.speed;
+    }
+
+    if (keys["ArrowDown"]) {
+        car.y += car.speed;
+    }
+
+    if (keys["q"] || keys["Q"]) {
+        car.rotation -= 0.05;
+    }
+
+    if (keys["e"] || keys["E"]) {
+        car.rotation += 0.05;
+    }
+
+    if (keys["+"] || keys["="]) {
+        car.scale += 0.01;
+    }
+
+    if (keys["-"]) {
+        car.scale = Math.max(0.2, car.scale - 0.01);
+    }
+}
+
+/* 
+   RASTERIZATION STAGE
+   Draw Sun
+   */
+
+function drawSun() {
+
+    ctx.beginPath();
+    ctx.arc(sun.x, sun.y, sun.radius, 0, Math.PI * 2);
+    ctx.fillStyle = sun.color;
+    ctx.fill();
+
+    for(let i = 0; i < 12; i++) {
+
+        let angle = (Math.PI * 2 / 12) * i;
+
+        let x1 = sun.x + Math.cos(angle) * 60;
+        let y1 = sun.y + Math.sin(angle) * 60;
+
+        let x2 = sun.x + Math.cos(angle) * 80;
+        let y2 = sun.y + Math.sin(angle) * 80;
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = "yellow";
+        ctx.stroke();
+    }
+}
+
+/* 
+   GEOMETRY STAGE
+   Apply transformations
+   Translation
+   Rotation
+   Scaling
+   */
+
+function drawCar() {
+
+    ctx.save();
+
+    ctx.translate(car.x, car.y);
+    ctx.rotate(car.rotation);
+    ctx.scale(car.scale, car.scale);
+
+    /* 
+       RASTERIZATION STAGE
+       Draw car body and wheels
+        */
+
+    // Car body
+    ctx.fillStyle = "red";
+    ctx.fillRect(-60, -25, 120, 50);
+
+    // Roof
+    ctx.fillStyle = "darkred";
+    ctx.fillRect(-30, -50, 60, 25);
+
+    // Wheels
+    ctx.fillStyle = "black";
+
+    ctx.beginPath();
+    ctx.arc(-40, 30, 15, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(40, 30, 15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Windows
+    ctx.fillStyle = "lightblue";
+    ctx.fillRect(-20, -45, 40, 20);
+
+    ctx.restore();
+}
+
+/* 
+   RENDER LOOP
+    */
+
+function animate() {
+
+    update();
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawSun();
+    drawCar();
+
+    requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+
+</body>
+</html>
